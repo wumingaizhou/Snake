@@ -12,21 +12,21 @@
 using namespace sfSnake;
 
 GameScreen::GameScreen()
-    : snake_(), grid_(), pauseButton_()
+    : snake_(), grid_(), pauseButton_(), score_(Game::GlobalFont)
 {
     pauseButton_.update("assets/image/pauseUI.png", 1 / 16.0f);
     pauseButton_.setPosition(
-        Game::GlobalVideoMode.width / 15.0 * 14.0,
-        Game::GlobalVideoMode.width / 15.0);
+        Game::GlobalVideoMode.size.x / 15.0f * 14.0f,
+        Game::GlobalVideoMode.size.x / 15.0f);
 
     score_.setFont(Game::GlobalFont);
     score_.setString(sf::String(L"分数:") + std::to_string(snake_.getScore()));
-    score_.setCharacterSize(Game::GlobalVideoMode.width / 25.0f);
+    score_.setCharacterSize(Game::GlobalVideoMode.size.x / 25.0f);
     score_.setFillColor(Game::Color::Yellow);
     setOriginMiddle(score_);
     score_.setPosition(
-        Game::GlobalVideoMode.width / 2.0f,
-        Game::GlobalVideoMode.width * 0.05f);
+        {Game::GlobalVideoMode.size.x / 2.0f,
+         Game::GlobalVideoMode.size.x * 0.05f});
 }
 
 void GameScreen::handleInput(sf::RenderWindow &window)
@@ -42,7 +42,7 @@ void GameScreen::handleInput(sf::RenderWindow &window)
         pauseButton_.focused(true);
         if (
             !Game::mouseButtonLocked &&
-            sf::Mouse::isButtonPressed(sf::Mouse::Left))
+            sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
@@ -87,14 +87,14 @@ void GameScreen::generateFruit()
     static std::default_random_engine colorEngine(time(NULL));
 
     static std::uniform_int_distribution<int> xPos(
-        Game::GlobalVideoMode.width / 15.0f,
-        Game::GlobalVideoMode.width -
-            Game::GlobalVideoMode.width / 10.0f);
+        Game::GlobalVideoMode.size.x / 15.0f,
+        Game::GlobalVideoMode.size.x -
+            Game::GlobalVideoMode.size.x / 10.0f);
 
     static std::uniform_int_distribution<int> yPos(
-        Game::GlobalVideoMode.width / 10.0f,
-        Game::GlobalVideoMode.height -
-            Game::GlobalVideoMode.width / 15.0f);
+        Game::GlobalVideoMode.size.x / 10.0f,
+        Game::GlobalVideoMode.size.y -
+            Game::GlobalVideoMode.size.x / 15.0f);
 
     static std::uniform_int_distribution<int> fruitColor(0, 7);
 

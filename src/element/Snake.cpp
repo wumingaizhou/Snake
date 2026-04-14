@@ -17,11 +17,14 @@ Snake::Snake()
     : hitSelf_(false),
       speedup_(false),
       direction_(Direction(0, -1)),
-      nodeRadius_(Game::GlobalVideoMode.width / 100.0f),
+      nodeRadius_(Game::GlobalVideoMode.size.x / 100.0f),
       tailOverlap_(0u),
       nodeShape(nodeRadius_),
       nodeMiddle(sf::Vector2f(nodeRadius_ * std::sqrt(3), nodeRadius_)),
-      score_(InitialSize)
+      headSprite(headTexture),
+      score_(InitialSize),
+      pickupSound_(pickupBuffer_),
+      dieSound_(dieBuffer_)
 {
     initNodes();
 
@@ -32,35 +35,53 @@ Snake::Snake()
     setOriginMiddle(nodeShape);
     setOriginMiddle(nodeMiddle);
 
-    headTexture.loadFromFile("assets/image/snakeHeadImage.png");
-    headTexture.setSmooth(true);
-    sf::Vector2u TextureSize = headTexture.getSize();
-    float headScale = nodeRadius_ / TextureSize.y * 2.6;
-    headSprite.setTexture(headTexture);
-    headSprite.setScale(headScale, headScale);
+    if (headTexture.loadFromFile("assets/image/snakeHeadImage.png"))
+    {
+        headTexture.setSmooth(true);
+        const sf::Vector2u textureSize = headTexture.getSize();
+        const float headScale = nodeRadius_ / textureSize.y * 2.6f;
+        headSprite.setTexture(headTexture, true);
+        headSprite.setScale({headScale, headScale});
+    }
+    else
+    {
+        std::cerr << "Failed to load snake head texture: assets/image/snakeHeadImage.png\n";
+    }
 
     setOriginMiddle(headSprite);
 
-    pickupBuffer_.loadFromFile("assets/sounds/pickup.wav");
-    pickupSound_.setBuffer(pickupBuffer_);
-    pickupSound_.setVolume(30);
+    if (pickupBuffer_.loadFromFile("assets/sounds/pickup.wav"))
+    {
+        pickupSound_.setBuffer(pickupBuffer_);
+        pickupSound_.setVolume(30);
+    }
+    else
+    {
+        std::cerr << "Failed to load pickup sound: assets/sounds/pickup.wav\n";
+    }
 
-    dieBuffer_.loadFromFile("assets/sounds/die.wav");
-    dieSound_.setBuffer(dieBuffer_);
-    dieSound_.setVolume(50);
+    if (dieBuffer_.loadFromFile("assets/sounds/die.wav"))
+    {
+        dieSound_.setBuffer(dieBuffer_);
+        dieSound_.setVolume(50);
+    }
+    else
+    {
+        std::cerr << "Failed to load death sound: assets/sounds/die.wav\n";
+    }
 }
 
 void Snake::initNodes()
 {
     path_.push_back(SnakePathNode(
-        Game::GlobalVideoMode.width / 2.0f,
-        Game::GlobalVideoMode.height / 2.0f));
+        Game::GlobalVideoMode.size.x / 2.0f,
+        Game::GlobalVideoMode.size.y / 2.0f));
     for (int i = 1; i <= 10 * InitialSize; i++)
     {
         path_.push_back(SnakePathNode(
-            Game::GlobalVideoMode.width / 2.0f -
+            Game::GlobalVideoMode.size.x / 2.0f -
                 direction_.x * i * nodeRadius_ / 5.0,
-            Game::GlobalVideoMode.height / 2.0f -
+            Game::GlobalVideoMode.size.y / 2.0f -
                 direction_.y * i * nodeRadius_ / 5.0));
     }
 }
@@ -68,20 +89,20 @@ void Snake::initNodes()
 void Snake::handleInput(sf::RenderWindow &window)
 {
     if (
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Up) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) ||
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
         direction_ = Direction(0, -1);
     else if (
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Down) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down) ||
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S))
         direction_ = Direction(0, 1);
     else if (
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Left) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left) ||
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A))
         direction_ = Direction(-1, 0);
     else if (
-        sf::Keyboard::isKeyPressed(sf::Keyboard::Right) ||
-        sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right) ||
+        sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         direction_ = Direction(1, 0);
 
     static double directionSize;
@@ -89,17 +110,17 @@ void Snake::handleInput(sf::RenderWindow &window)
     if (!Game::mouseButtonLocked)
     {
         if (
-            sf::Mouse::isButtonPressed(sf::Mouse::Left) ||
-            sf::Mouse::isButtonPressed(sf::Mouse::Right))
+            sf::Mouse::isButtonPressed(sf::Mouse::Button::Left) ||
+            sf::Mouse::isButtonPressed(sf::Mouse::Button::Right))
         {
             static sf::Vector2i MousePosition;
             MousePosition = sf::Mouse::getPosition(window);
             if (
                 dis(MousePosition,
                     sf::Vector2f(
-                        Game::GlobalVideoMode.width / 15.0f * 14.0f,
-                        Game::GlobalVideoMode.width / 15.0f)) >
-                Game::GlobalVideoMode.width / 16.0f)
+                        Game::GlobalVideoMode.size.x / 15.0f * 14.0f,
+                        Game::GlobalVideoMode.size.x / 15.0f)) >
+                Game::GlobalVideoMode.size.x / 16.0f)
             {
                 direction_ =
                     static_cast<sf::Vector2f>(MousePosition) -
@@ -111,7 +132,7 @@ void Snake::handleInput(sf::RenderWindow &window)
         }
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
         speedup_ = true;
     else
         speedup_ = false;
@@ -202,9 +223,9 @@ void Snake::checkOutOfWindow()
     auto inWindow = [](SnakePathNode &node) -> bool
     {
         return node.x >= 0 &&
-               node.x <= Game::GlobalVideoMode.width &&
+               node.x <= Game::GlobalVideoMode.size.x &&
                node.y >= 0 &&
-               node.y <= Game::GlobalVideoMode.height;
+               node.y <= Game::GlobalVideoMode.size.y;
     };
     bool OutOfWindow = true;
     for (auto i : path_)
@@ -217,29 +238,29 @@ void Snake::checkOutOfWindow()
         SnakePathNode &tail = path_.back();
         if (tail.x < 0)
             for (auto &i : path_)
-                i.x = i.x + Game::GlobalVideoMode.width;
-        else if (tail.x > Game::GlobalVideoMode.width)
+                i.x = i.x + Game::GlobalVideoMode.size.x;
+        else if (tail.x > Game::GlobalVideoMode.size.x)
             for (auto &i : path_)
-                i.x = i.x - Game::GlobalVideoMode.width;
+                i.x = i.x - Game::GlobalVideoMode.size.x;
         else if (tail.y < 0)
             for (auto &i : path_)
-                i.y = i.y + Game::GlobalVideoMode.height;
-        else if (tail.y > Game::GlobalVideoMode.height)
+                i.y = i.y + Game::GlobalVideoMode.size.y;
+        else if (tail.y > Game::GlobalVideoMode.size.y)
             for (auto &i : path_)
-                i.y = i.y - Game::GlobalVideoMode.height;
+                i.y = i.y - Game::GlobalVideoMode.size.y;
     }
 }
 
 SnakePathNode Snake::toWindow(SnakePathNode node)
 {
     while (node.x < 0)
-        node.x = node.x + Game::GlobalVideoMode.width;
-    while (node.x > Game::GlobalVideoMode.width)
-        node.x = node.x - Game::GlobalVideoMode.width;
+        node.x = node.x + Game::GlobalVideoMode.size.x;
+    while (node.x > Game::GlobalVideoMode.size.x)
+        node.x = node.x - Game::GlobalVideoMode.size.x;
     while (node.y < 0)
-        node.y = node.y + Game::GlobalVideoMode.height;
-    while (node.y > Game::GlobalVideoMode.height)
-        node.y = node.y - Game::GlobalVideoMode.height;
+        node.y = node.y + Game::GlobalVideoMode.size.y;
+    while (node.y > Game::GlobalVideoMode.size.y)
+        node.y = node.y - Game::GlobalVideoMode.size.y;
     return node;
 }
 
@@ -260,7 +281,7 @@ void Snake::render(sf::RenderWindow &window)
         3.14159265358979323846 * 180.0;
     if (direction_.x > 0)
         angle = -angle;
-    headSprite.setRotation(angle);
+    headSprite.setRotation(sf::degrees(angle));
 
     renderNode(wNowHeadNode, headSprite, window, 3);
 
@@ -281,7 +302,7 @@ void Snake::render(sf::RenderWindow &window)
                     3.14159265358979323846 * 180.0;
                 if (recDirection.x > 0)
                     angle = -angle;
-                nodeMiddle.setRotation(angle);
+                nodeMiddle.setRotation(sf::degrees(angle));
 
                 static SnakePathNode wNowSnakeNode;
                 static SnakePathNode wMiddleNode;
@@ -304,34 +325,34 @@ void Snake::renderNode(sf::Vector2f &nowPosition, T &shape, sf::RenderWindow &wi
 
     if (nowPosition.x <= nodeRadius_ + offset)
     {
-        shape.setPosition(nowPosition + sf::Vector2f(Game::GlobalVideoMode.width, 0));
+        shape.setPosition(nowPosition + sf::Vector2f(Game::GlobalVideoMode.size.x, 0.f));
         window.draw(shape);
     }
-    else if (nowPosition.x >= Game::GlobalVideoMode.width - nodeRadius_ - offset)
+    else if (nowPosition.x >= Game::GlobalVideoMode.size.x - nodeRadius_ - offset)
     {
-        shape.setPosition(nowPosition - sf::Vector2f(Game::GlobalVideoMode.width, 0));
+        shape.setPosition(nowPosition - sf::Vector2f(Game::GlobalVideoMode.size.x, 0.f));
         window.draw(shape);
     }
 
     if (nowPosition.y <= nodeRadius_ + offset)
     {
-        shape.setPosition(nowPosition + sf::Vector2f(0, Game::GlobalVideoMode.height));
+        shape.setPosition(nowPosition + sf::Vector2f(0.f, Game::GlobalVideoMode.size.y));
         window.draw(shape);
     }
-    else if (nowPosition.y >= Game::GlobalVideoMode.height - nodeRadius_ - offset)
+    else if (nowPosition.y >= Game::GlobalVideoMode.size.y - nodeRadius_ - offset)
     {
-        shape.setPosition(nowPosition - sf::Vector2f(0, Game::GlobalVideoMode.height));
+        shape.setPosition(nowPosition - sf::Vector2f(0.f, Game::GlobalVideoMode.size.y));
         window.draw(shape);
     }
 
     if (nowPosition.x <= nodeRadius_ + offset && nowPosition.y <= nodeRadius_ + offset)
     {
-        shape.setPosition(nowPosition + sf::Vector2f(Game::GlobalVideoMode.width, Game::GlobalVideoMode.height));
+        shape.setPosition(nowPosition + sf::Vector2f(Game::GlobalVideoMode.size.x, Game::GlobalVideoMode.size.y));
         window.draw(shape);
     }
-    else if (nowPosition.x >= Game::GlobalVideoMode.width - nodeRadius_ - offset && nowPosition.y >= Game::GlobalVideoMode.height - nodeRadius_ - offset)
+    else if (nowPosition.x >= Game::GlobalVideoMode.size.x - nodeRadius_ - offset && nowPosition.y >= Game::GlobalVideoMode.size.y - nodeRadius_ - offset)
     {
-        shape.setPosition(nowPosition - sf::Vector2f(Game::GlobalVideoMode.width, Game::GlobalVideoMode.height));
+        shape.setPosition(nowPosition - sf::Vector2f(Game::GlobalVideoMode.size.x, Game::GlobalVideoMode.size.y));
         window.draw(shape);
     }
 }

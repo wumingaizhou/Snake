@@ -11,7 +11,7 @@ namespace sfSnake
         sf::Color originColor_;
 
     public:
-        OptionButton() = default;
+        OptionButton();
         ~OptionButton() = default;
 
         void settings(

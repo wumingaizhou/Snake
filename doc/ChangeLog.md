@@ -144,3 +144,35 @@ this change log is to log the difference from origin sfSnake on https://github.c
 
 1. 修改了 bgm
 2. 继续写设计说明文档和 `README.txt` 
+
+## 20260414
+
+1. 将项目从 `SFML 2.5` 升级到 `SFML 3.0.2`
+   1. `CMakeLists.txt` 中改为使用 `find_package(SFML 3 REQUIRED COMPONENTS System Window Graphics Audio)`
+   2. 完成了在 `UCRT64 + MinGW Makefiles` 环境下的重新配置、编译与运行验证
+
+2. 按照 `SFML 3` 的新接口完成了主要源码迁移
+   1. `sf::Rect` 相关代码从旧的 `left/top/width/height` 成员访问改为 `position/size/getCenter()` 方式
+   2. `sf::VideoMode` 从旧的 `width/height` 改为 `size.x/size.y`
+   3. 事件处理从 `pollEvent(event)` 迁移到 `std::optional<sf::Event> pollEvent()` 和 `event->is<...>()`
+   4. 键盘和鼠标枚举改为 `sf::Keyboard::Key::*` 与 `sf::Mouse::Button::*`
+   5. 旋转与变换相关接口适配 `sf::Angle`、`sf::degrees(...)` 以及向量版本的 `setPosition/setScale/setOrigin`
+   6. 音频和窗口接口适配 `setLooping()`、`setIcon(const sf::Image&)` 等新写法
+
+3. 修复了 `SFML 3` 迁移后引出的资源与界面显示问题
+   1. `sf::Sprite` 不再依赖默认构造，相关 `Sprite/Text/Sound` 对象改为显式初始化
+   2. 调整 `setTexture(..., true)`，修复菜单页只显示“帮助 / 关于”文字按钮、图片按钮不显示的问题
+   3. 为资源加载增加返回值检查，降低静默失败时的排查成本
+
+4. 补充了 Windows 运行时依赖复制逻辑
+   1. 构建后自动将 `SFML` 及其下游运行时 `dll` 复制到 `build` 目录
+   2. 解决了 `libsfml-graphics-3.dll`、`libvorbis-0.dll`、`libFLAC.dll`、`libfreetype-6.dll`、`libstdc++-6.dll` 等缺失导致的启动失败问题
+   3. 新增 `cmake/CopyRuntimeDeps.cmake` 递归收集运行时依赖，并过滤无害的系统级未解析项 warning
+
+5. 对主循环做了小幅优化
+   1. 为窗口增加 `setFramerateLimit(60)`
+   2. 调整主循环为“每帧处理输入、固定步长更新、每帧渲染一次”，修复迁移后运行时明显卡顿的问题
+
+6. 当前结果
+   1. 项目已可在 `SFML 3.0.2` 下正常配置、编译、运行
+   2. 菜单、帮助、关于、暂停、游戏主流程、音效与贴图显示均已恢复正常

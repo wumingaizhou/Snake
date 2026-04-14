@@ -29,6 +29,6 @@ namespace sfSnake
     template <typename T>
     bool Button::contain(sf::Vector2<T> point) const
     {
-        return dis(point, sprite_.getPosition()) < (sprite_.getGlobalBounds().width) / 2.0f;
+        return dis(point, sprite_.getPosition()) < sprite_.getGlobalBounds().size.x / 2.0f;
     }
 }

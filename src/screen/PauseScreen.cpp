@@ -20,24 +20,24 @@ PauseScreen::PauseScreen()
     button_[2].update("assets/image/exitUI.png");
     returnButton_.update("assets/image/returnUI.png", 1 / 16.0f);
 
-    button_[0].setPosition(Game::GlobalVideoMode.width / 3.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
-    button_[1].setPosition(Game::GlobalVideoMode.width / 2.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
-    button_[2].setPosition(Game::GlobalVideoMode.width / 3.0 * 2.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
-    returnButton_.setPosition(Game::GlobalVideoMode.width / 15.0, Game::GlobalVideoMode.width / 15.0);
+    button_[0].setPosition(Game::GlobalVideoMode.size.x / 3.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
+    button_[1].setPosition(Game::GlobalVideoMode.size.x / 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
+    button_[2].setPosition(Game::GlobalVideoMode.size.x / 3.0f * 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
+    returnButton_.setPosition(Game::GlobalVideoMode.size.x / 15.0f, Game::GlobalVideoMode.size.x / 15.0f);
 
     helpButton_.settings(
         L"帮助",
         Game::GlobalFont,
-        Game::GlobalVideoMode.width / 20.0,
+        Game::GlobalVideoMode.size.x / 20.0f,
         Game::Color::Green,
-        sf::Vector2f(Game::GlobalVideoMode.width / 5.0f * 2.0f, Game::GlobalVideoMode.height / 5.0f * 4.0f));
+        sf::Vector2f(Game::GlobalVideoMode.size.x / 5.0f * 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 4.0f));
 
     aboutButton_.settings(
         L"关于",
         Game::GlobalFont,
-        Game::GlobalVideoMode.width / 20.0,
+        Game::GlobalVideoMode.size.x / 20.0f,
         Game::Color::Green,
-        sf::Vector2f(Game::GlobalVideoMode.width / 5.0f * 3.0f, Game::GlobalVideoMode.height / 5.0f * 4.0f));
+        sf::Vector2f(Game::GlobalVideoMode.size.x / 5.0f * 3.0f, Game::GlobalVideoMode.size.y / 5.0f * 4.0f));
 }
 
 void PauseScreen::handleInput(sf::RenderWindow &window)
@@ -53,7 +53,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (button_[0].contain(mousePosition))
     {
         button_[0].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
@@ -66,7 +66,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (button_[1].contain(mousePosition))
     {
         button_[1].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = Game::mouseButtonClock.restart();
             Game::mouseButtonLocked = true;
@@ -78,7 +78,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (button_[2].contain(mousePosition))
     {
         button_[2].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             window.close();
             return;
@@ -88,7 +88,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (returnButton_.contain(mousePosition))
     {
         returnButton_.focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = Game::mouseButtonClock.restart();
             Game::mouseButtonLocked = true;
@@ -101,7 +101,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (helpButton_.contains(mousePosition))
     {
         helpButton_.focused();
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             helpButton_.seleted();
             Game::mouseButtonCDtime = sf::Time::Zero;
@@ -115,7 +115,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
     if (aboutButton_.contains(mousePosition))
     {
         aboutButton_.focused();
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             aboutButton_.seleted();
             Game::mouseButtonCDtime = sf::Time::Zero;

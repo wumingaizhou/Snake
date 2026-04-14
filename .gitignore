@@ -11,3 +11,4 @@ Release/
 .idea
 cmake-build-*
 compile_commands.json
+build-release/

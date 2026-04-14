@@ -49,8 +49,7 @@ sf::VideoMode Game::initVideoMode_()
 {
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
     return sf::VideoMode(
-        desktopMode.width / 2.0f,
-        desktopMode.height / 2.0f,
+        {desktopMode.size.x / 2u, desktopMode.size.y / 2u},
         desktopMode.bitsPerPixel);
 }
 
@@ -106,32 +105,40 @@ Game::Game()
         GlobalVideoMode,   // videoMode
         "sfSnakePro",      // window name
         sf::Style::Close); // window Style
-    sf::Image icon;
-    icon.loadFromFile("assets/image/favicon.png");
-    window_.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
+    window_.setFramerateLimit(60);
 
-    bgMusic_.openFromFile("assets/music/Roa - Bloom.wav");
-    bgMusic_.setVolume(30);
-    bgMusic_.setLoop(true);
-    bgMusic_.play();
+    sf::Image icon;
+    if (icon.loadFromFile("assets/image/favicon.png"))
+        window_.setIcon(icon);
+    else
+        std::cerr << "Failed to load icon: assets/image/favicon.png\n";
+
+    if (bgMusic_.openFromFile("assets/music/Roa - Bloom.wav"))
+    {
+        bgMusic_.setVolume(30);
+        bgMusic_.setLooping(true);
+        bgMusic_.play();
+    }
+    else
+    {
+        std::cerr << "Failed to load background music: assets/music/Roa - Bloom.wav\n";
+    }
 }
 
 void Game::handleInput()
 {
-    static sf::Event event;
-
-    while (window_.pollEvent(event))
+    while (const std::optional<sf::Event> event = window_.pollEvent())
     {
-        if (event.type == sf::Event::Closed)
+        if (event->is<sf::Event::Closed>())
             window_.close();
     }
 
     if (window_.hasFocus() &&
         sf::FloatRect(
-            sf::Vector2f(0, 0),
+            {0.f, 0.f},
             sf::Vector2f(
-                Game::GlobalVideoMode.width,
-                Game::GlobalVideoMode.height))
+                static_cast<float>(Game::GlobalVideoMode.size.x),
+                static_cast<float>(Game::GlobalVideoMode.size.y)))
             .contains(static_cast<sf::Vector2f>(
                 sf::Mouse::getPosition(window_))))
         Game::MainScreen->handleInput(window_);
@@ -161,15 +168,15 @@ void Game::run()
         sf::Time delta = clock.restart();
         timeSinceLastUpdate += delta;
 
+        handleInput();
+
         while (timeSinceLastUpdate > TimePerFrame_)
         {
             timeSinceLastUpdate -= TimePerFrame_;
-            handleInput();
-
             update(TimePerFrame_);
-
-            render();
         }
+
+        render();
 
         delta = mouseButtonClock.restart();
         mouseButtonCDtime += delta;

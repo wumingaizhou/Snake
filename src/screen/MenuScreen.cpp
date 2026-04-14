@@ -15,29 +15,30 @@ using namespace sfSnake;
 MenuScreen::MenuScreen()
     : button_(3)
 {
-    Game::GlobalFont.loadFromFile("assets/fonts/SourceHanSansSC-Bold.otf");
+    if (!Game::GlobalFont.openFromFile("assets/fonts/SourceHanSansSC-Bold.otf"))
+        std::cerr << "Failed to load font: assets/fonts/SourceHanSansSC-Bold.otf\n";
 
     button_[0].update("assets/image/optionUI.png");
     button_[1].update("assets/image/startUI.png");
     button_[2].update("assets/image/exitUI.png");
 
-    button_[0].setPosition(Game::GlobalVideoMode.width / 3.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
-    button_[1].setPosition(Game::GlobalVideoMode.width / 2.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
-    button_[2].setPosition(Game::GlobalVideoMode.width / 3.0 * 2.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
+    button_[0].setPosition(Game::GlobalVideoMode.size.x / 3.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
+    button_[1].setPosition(Game::GlobalVideoMode.size.x / 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
+    button_[2].setPosition(Game::GlobalVideoMode.size.x / 3.0f * 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 3.0f);
 
     helpButton_.settings(
         L"帮助",
         Game::GlobalFont,
-        Game::GlobalVideoMode.width / 20.0,
+        Game::GlobalVideoMode.size.x / 20.0f,
         Game::Color::Green,
-        sf::Vector2f(Game::GlobalVideoMode.width / 5.0f * 2.0f, Game::GlobalVideoMode.height / 5.0f * 4.0f));
+        sf::Vector2f(Game::GlobalVideoMode.size.x / 5.0f * 2.0f, Game::GlobalVideoMode.size.y / 5.0f * 4.0f));
 
     aboutButton_.settings(
         L"关于",
         Game::GlobalFont,
-        Game::GlobalVideoMode.width / 20.0,
+        Game::GlobalVideoMode.size.x / 20.0f,
         Game::Color::Green,
-        sf::Vector2f(Game::GlobalVideoMode.width / 5.0f * 3.0f, Game::GlobalVideoMode.height / 5.0f * 4.0f));
+        sf::Vector2f(Game::GlobalVideoMode.size.x / 5.0f * 3.0f, Game::GlobalVideoMode.size.y / 5.0f * 4.0f));
 }
 
 void MenuScreen::handleInput(sf::RenderWindow &window)
@@ -53,7 +54,7 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
     if (button_[0].contain(mousePosition))
     {
         button_[0].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
@@ -66,7 +67,7 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
     if (button_[1].contain(mousePosition))
     {
         button_[1].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonLocked = true;
             Game::mouseButtonCDtime = sf::Time::Zero;
@@ -86,7 +87,7 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
     if (button_[2].contain(mousePosition))
     {
         button_[2].focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             window.close();
             return;
@@ -96,7 +97,7 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
     if (helpButton_.contains(mousePosition))
     {
         helpButton_.focused();
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             helpButton_.seleted();
             Game::mouseButtonCDtime = sf::Time::Zero;
@@ -110,7 +111,7 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
     if (aboutButton_.contains(mousePosition))
     {
         aboutButton_.focused();
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             aboutButton_.seleted();
             Game::mouseButtonCDtime = sf::Time::Zero;

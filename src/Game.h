@@ -88,8 +88,7 @@ namespace sfSnake
     inline sf::FloatRect setOriginMiddle(T &shape)
     {
         sf::FloatRect shapeBounds = shape.getLocalBounds();
-        shape.setOrigin(shapeBounds.left + shapeBounds.width / 2,
-                        shapeBounds.top + shapeBounds.height / 2);
+        shape.setOrigin(shapeBounds.getCenter());
         return shapeBounds;
     }
 

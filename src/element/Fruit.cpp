@@ -8,7 +8,7 @@ using namespace sfSnake;
 Fruit::Fruit(sf::Vector2f position, sf::Color color, int score)
     : score_(score)
 {
-    shape_.setRadius(Game::GlobalVideoMode.width / 256.0f);
+    shape_.setRadius(Game::GlobalVideoMode.size.x / 256.0f);
     setOriginMiddle(shape_);
     shape_.setPosition(position);
     shape_.setFillColor(color);

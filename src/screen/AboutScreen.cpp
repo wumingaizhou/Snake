@@ -11,6 +11,7 @@
 using namespace sfSnake;
 
 AboutScreen::AboutScreen()
+    : text_(Game::GlobalFont)
 {
     text_.setFont(Game::GlobalFont);
     text_.setString(
@@ -18,24 +19,28 @@ AboutScreen::AboutScreen()
         sf::String(L"原作者：jhpy1024(jhpy1024@gmail.com)\n\n") +
         sf::String(L"作者：精益君(JingYiJun3104@outlook.com)\n\n") +
         sf::String(L"The MIT License (MIT) Copyright © 2022 <JingYiJun>"));
-    text_.setCharacterSize(Game::GlobalVideoMode.width / 35.0f);
+    text_.setCharacterSize(Game::GlobalVideoMode.size.x / 35.0f);
     text_.setFillColor(Game::Color::Green);
     setOriginMiddle(text_);
-    text_.setPosition(Game::GlobalVideoMode.width / 2.0, Game::GlobalVideoMode.height / 5.0 * 3.0);
+    text_.setPosition(
+        {Game::GlobalVideoMode.size.x / 2.0f,
+         Game::GlobalVideoMode.size.y / 5.0f * 3.0f});
 
     returnButton_.update("assets/image/returnUI.png", 1 / 16.0f);
-    returnButton_.setPosition(Game::GlobalVideoMode.width / 15.0f, Game::GlobalVideoMode.width / 15.0f);
+    returnButton_.setPosition(
+        Game::GlobalVideoMode.size.x / 15.0f,
+        Game::GlobalVideoMode.size.x / 15.0f);
 }
 
 void AboutScreen::handleInput(sf::RenderWindow &window)
 {
-    auto mousePosition = sf::Mouse::getPosition(window);
+    const auto mousePosition = sf::Mouse::getPosition(window);
 
     returnButton_.focused(false);
     if (returnButton_.contain(mousePosition))
     {
         returnButton_.focused(true);
-        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;

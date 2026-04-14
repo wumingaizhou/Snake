@@ -5,6 +5,11 @@
 
 using namespace sfSnake;
 
+OptionButton::OptionButton()
+    : text_(Game::GlobalFont)
+{
+}
+
 void OptionButton::settings(
     sf::String content,
     sf::Font &font,

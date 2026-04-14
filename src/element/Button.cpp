@@ -1,26 +1,35 @@
 #include "element/Button.h"
 #include "Game.h"
 
+#include <iostream>
+
 using namespace sfSnake;
 
 Button::Button()
-    : focused_{false}
+    : sprite_(texture_), focused_{false}
 {
 }
 
 void Button::update(std::string filename, float scale)
 {
     if (!texture_.loadFromFile(filename))
+    {
+        std::cerr << "Failed to load button texture: " << filename << '\n';
         return;
+    }
     texture_.setSmooth(true);
-    sprite_.setTexture(texture_);
+    sprite_.setTexture(texture_, true);
     sf::FloatRect bounds = setOriginMiddle(sprite_);
-    sprite_.setScale(Game::GlobalVideoMode.width / bounds.width * scale, Game::GlobalVideoMode.width / bounds.width * scale);
+    if (bounds.size.x > 0.f)
+    {
+        const float buttonScale = Game::GlobalVideoMode.size.x / bounds.size.x * scale;
+        sprite_.setScale({buttonScale, buttonScale});
+    }
 }
 
 void Button::setPosition(float x, float y)
 {
-    sprite_.setPosition(x, y);
+    sprite_.setPosition({x, y});
 }
 
 void Button::focused(bool status)
@@ -41,4 +50,3 @@ void Button::render(sf::RenderWindow &window) const
 {
     window.draw(sprite_);
 }
-

@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
-#include <vector>
 #include <deque>
 
 #include "Fruit.h"
@@ -22,11 +21,14 @@ namespace sfSnake
         void update(sf::Time delta);
         void render(sf::RenderWindow &window);
 
-        void checkFruitCollisions(std::deque<Fruit> &fruits);
+        bool canEatFruit(const Fruit &fruit) const;
+        void eatFruit(const Fruit &fruit);
 
         bool hitSelf() const;
 
         unsigned getScore() const;
+        sf::Vector2f getHeadPosition() const;
+        float getHeadRadius() const;
 
         void printhead() const;
 
@@ -42,7 +44,7 @@ namespace sfSnake
         template <typename T>
         void renderNode(sf::Vector2f &nowPosition, T &shape, sf::RenderWindow &window, int offset);
 
-        SnakePathNode toWindow(SnakePathNode node);
+        SnakePathNode toWindow(SnakePathNode node) const;
         bool hitSelf_;
         bool speedup_;
 

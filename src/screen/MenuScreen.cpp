@@ -1,9 +1,11 @@
 #include <SFML/Graphics.hpp>
 
-#include <memory>
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "Game.h"
+#include "HighScoreStorage.h"
 #include "screen/GameScreen.h"
 #include "screen/MenuScreen.h"
 #include "screen/OptionScreen.h"
@@ -13,7 +15,12 @@
 using namespace sfSnake;
 
 MenuScreen::MenuScreen()
-    : button_(3)
+    : button_(3),
+      helpButton_(),
+      aboutButton_(),
+      highScoresText_(Game::GlobalFont),
+      topScores_(loadTopScores()),
+      highScoreRefreshElapsed_(sf::Time::Zero)
 {
     if (!Game::GlobalFont.openFromFile("assets/fonts/SourceHanSansSC-Bold.otf"))
         std::cerr << "Failed to load font: assets/fonts/SourceHanSansSC-Bold.otf\n";
@@ -39,6 +46,13 @@ MenuScreen::MenuScreen()
         Game::GlobalVideoMode.size.x / 20.0f,
         Game::Color::Green,
         sf::Vector2f(Game::GlobalVideoMode.size.x / 5.0f * 3.0f, Game::GlobalVideoMode.size.y / 5.0f * 4.0f));
+
+    highScoresText_.setFont(Game::GlobalFont);
+    highScoresText_.setCharacterSize(Game::GlobalVideoMode.size.x / 32.0f);
+    highScoresText_.setFillColor(Game::Color::Yellow);
+    highScoresText_.setOutlineThickness(Game::GlobalVideoMode.size.x / 500.0f);
+    highScoresText_.setOutlineColor(sf::Color(0x1c2833dd));
+    refreshHighScores();
 }
 
 void MenuScreen::handleInput(sf::RenderWindow &window)
@@ -126,13 +140,47 @@ void MenuScreen::handleInput(sf::RenderWindow &window)
 void MenuScreen::update(sf::Time delta)
 {
     Game::GlobalTitle.update(delta);
+
+    highScoreRefreshElapsed_ += delta;
+    if (highScoreRefreshElapsed_ >= sf::seconds(1.f))
+    {
+        highScoreRefreshElapsed_ = sf::Time::Zero;
+        topScores_ = loadTopScores();
+        refreshHighScores();
+    }
 }
 
 void MenuScreen::render(sf::RenderWindow &window)
 {
     Game::GlobalTitle.render(window);
+    window.draw(highScoresText_);
     for (auto &button : button_)
         button.render(window);
     helpButton_.render(window);
     aboutButton_.render(window);
+}
+
+void MenuScreen::refreshHighScores()
+{
+    std::wstring text = L"历史前三\n";
+    for (std::size_t index = 0; index < 3; ++index)
+    {
+        text += std::to_wstring(index + 1);
+        text += L". ";
+        if (index < topScores_.size())
+            text += std::to_wstring(topScores_[index]);
+        else
+            text += L"--";
+
+        if (index + 1 < 3)
+            text += L"\n";
+    }
+
+    highScoresText_.setString(text);
+    const sf::FloatRect bounds = highScoresText_.getLocalBounds();
+    highScoresText_.setOrigin(
+        {bounds.position.x + bounds.size.x, bounds.position.y});
+    highScoresText_.setPosition(
+        {Game::GlobalVideoMode.size.x - Game::GlobalVideoMode.size.x / 20.0f,
+         Game::GlobalVideoMode.size.y / 15.0f});
 }

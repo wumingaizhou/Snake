@@ -150,25 +150,18 @@ void Snake::update(sf::Time delta)
     checkSelfCollisions();
 }
 
-void Snake::checkFruitCollisions(std::deque<Fruit> &fruits)
+bool Snake::canEatFruit(const Fruit &fruit) const
 {
-    auto toRemove = fruits.end();
-    SnakePathNode headnode = path_.front();
+    return dis(
+               fruit.getPosition(),
+               toWindow(path_.front())) <
+           nodeRadius_ + fruit.getRadius();
+}
 
-    for (auto i = fruits.begin(); i != fruits.end(); ++i)
-    {
-        if (dis(
-                i->shape_.getPosition(), toWindow(headnode)) <
-            nodeRadius_ + i->shape_.getRadius())
-            toRemove = i;
-    }
-
-    if (toRemove != fruits.end())
-    {
-        pickupSound_.play();
-        grow(toRemove->score_);
-        fruits.erase(toRemove);
-    }
+void Snake::eatFruit(const Fruit &fruit)
+{
+    pickupSound_.play();
+    grow(fruit.score_);
 }
 
 void Snake::grow(int score)
@@ -180,6 +173,16 @@ void Snake::grow(int score)
 unsigned Snake::getScore() const
 {
     return score_;
+}
+
+sf::Vector2f Snake::getHeadPosition() const
+{
+    return toWindow(path_.front());
+}
+
+float Snake::getHeadRadius() const
+{
+    return nodeRadius_;
 }
 
 bool Snake::hitSelf() const
@@ -251,7 +254,7 @@ void Snake::checkOutOfWindow()
     }
 }
 
-SnakePathNode Snake::toWindow(SnakePathNode node)
+SnakePathNode Snake::toWindow(SnakePathNode node) const
 {
     while (node.x < 0)
         node.x = node.x + Game::GlobalVideoMode.size.x;

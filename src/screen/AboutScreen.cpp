@@ -15,9 +15,8 @@ AboutScreen::AboutScreen()
 {
     text_.setFont(Game::GlobalFont);
     text_.setString(
-        sf::String(L"这是复旦大学2022年春面向对象程序设计课程大作业\n\n") +
-        sf::String(L"原作者：jhpy1024(jhpy1024@gmail.com)\n\n") +
-        sf::String(L"作者：精益君(JingYiJun3104@outlook.com)\n\n") +
+        sf::String(L"软件工程结构化设计设计作业\n\n") +
+        sf::String(L"原作者：精益君(JingYiJun3104@outlook.com)\n\n") +
         sf::String(L"The MIT License (MIT) Copyright © 2022 <JingYiJun>"));
     text_.setCharacterSize(Game::GlobalVideoMode.size.x / 35.0f);
     text_.setFillColor(Game::Color::Green);

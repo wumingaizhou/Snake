@@ -20,8 +20,13 @@ namespace sfSnake
         void render(sf::RenderWindow &window) override;
 
     private:
+        void refreshHighScores();
+
         std::vector<Button> button_;
         OptionButton helpButton_;
         OptionButton aboutButton_;
+        sf::Text highScoresText_;
+        std::vector<unsigned> topScores_;
+        sf::Time highScoreRefreshElapsed_;
     };
 }

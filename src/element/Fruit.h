@@ -4,13 +4,30 @@
 
 namespace sfSnake
 {
+    enum class FruitKind
+    {
+        Normal,
+        Bonus
+    };
+
     struct Fruit
     {
         sf::CircleShape shape_;
         int score_;
+        FruitKind kind_;
+        bool visible_;
 
-        Fruit(sf::Vector2f position, sf::Color color, int score);
+        Fruit(
+            sf::Vector2f position,
+            sf::Color color,
+            int score,
+            FruitKind kind = FruitKind::Normal,
+            float radiusScale = 1.0f);
 
-        void render(sf::RenderWindow &window);
+        sf::Vector2f getPosition() const;
+        float getRadius() const;
+        void setVisible(bool visible);
+
+        void render(sf::RenderWindow &window) const;
     };
 }

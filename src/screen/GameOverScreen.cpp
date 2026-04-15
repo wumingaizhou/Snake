@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "Game.h"
+#include "HighScoreStorage.h"
 #include "screen/GameScreen.h"
 #include "screen/GameOverScreen.h"
 #include "screen/HelpScreen.h"
@@ -14,6 +15,8 @@ using namespace sfSnake;
 GameOverScreen::GameOverScreen(std::size_t score)
     : text_(Game::GlobalFont), button_(3), score_(score)
 {
+    recordScore(score_);
+
     text_.setFont(Game::GlobalFont);
     text_.setString(sf::String(L"最终分数：") + std::to_string(score));
     text_.setFillColor(Game::Color::Yellow);

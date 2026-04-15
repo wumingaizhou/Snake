@@ -1,5 +1,11 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现实际游戏界面的更新流程，包括水果生成、奖励水果计时、
+ * 分数显示、暂停入口以及游戏结束切换。
+ */
+
 #include <algorithm>
 #include <memory>
 #include <random>
@@ -31,6 +37,7 @@ GameScreen::GameScreen()
       bonusFruitLifetime_(sf::Time::Zero),
       nextBonusFruitSpawn_(sf::Time::Zero)
 {
+    // 暂停按钮固定放在右上角，避免和蛇的主要活动区域重叠。
     pauseButton_.update("assets/image/pauseUI.png", 1 / 16.0f);
     pauseButton_.setPosition(
         Game::GlobalVideoMode.size.x / 15.0f * 14.0f,
@@ -45,6 +52,7 @@ GameScreen::GameScreen()
         {Game::GlobalVideoMode.size.x / 2.0f,
          Game::GlobalVideoMode.size.x * 0.05f});
 
+    // 开局就先安排一次奖励水果刷新计划。
     scheduleNextBonusFruit();
 }
 
@@ -63,6 +71,7 @@ void GameScreen::handleInput(sf::RenderWindow &window)
             !Game::mouseButtonLocked &&
             sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
+            // 暂停时保留当前游戏页，返回后可以继续原局游戏。
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
             Game::TmpGameScreen = Game::MainScreen;
@@ -74,12 +83,14 @@ void GameScreen::handleInput(sf::RenderWindow &window)
 
 void GameScreen::update(sf::Time delta)
 {
+    // 保持场上始终有固定数量的普通水果。
     while (fruit_.size() < NormalFruitTargetCount)
         generateFruit();
 
     updateBonusFruit(delta);
     snake_.update(delta);
 
+    // 找到第一个被吃到的普通水果并移除。
     auto normalFruit = std::find_if(
         fruit_.begin(),
         fruit_.end(),
@@ -93,6 +104,7 @@ void GameScreen::update(sf::Time delta)
 
     if (bonusFruit_ && snake_.canEatFruit(*bonusFruit_))
     {
+        // 奖励水果被吃掉后，立即重新进入下一轮生成倒计时。
         snake_.eatFruit(*bonusFruit_);
         bonusFruit_.reset();
         bonusFruitLifetime_ = sf::Time::Zero;
@@ -101,6 +113,7 @@ void GameScreen::update(sf::Time delta)
 
     if (snake_.hitSelf())
     {
+        // 一旦撞到自己，切换到结算界面并携带最终分数。
         Game::MainScreen = std::make_shared<GameOverScreen>(snake_.getScore());
         return;
     }
@@ -128,6 +141,7 @@ void GameScreen::generateFruit()
     const float radius = Game::GlobalVideoMode.size.x / 256.0f;
     const sf::Vector2f position = generateFruitPosition(radius);
 
+    // 使用简单的权重分布控制不同颜色水果的出现概率与分值。
     switch (fruitColor(randomEngine_))
     {
     case 0: // black
@@ -170,6 +184,7 @@ void GameScreen::generateFruit()
 
 Fruit GameScreen::createBonusFruit()
 {
+    // 奖励水果比普通水果更大、更显眼，并且分数更高。
     const float radius =
         Game::GlobalVideoMode.size.x / 256.0f * BonusFruitRadiusScale;
     return Fruit(
@@ -182,6 +197,7 @@ Fruit GameScreen::createBonusFruit()
 
 sf::Vector2f GameScreen::generateFruitPosition(float radius)
 {
+    // 给水果预留 UI 安全边距，避免刷到标题、分数或暂停按钮附近。
     std::uniform_real_distribution<float> xPos(
         Game::GlobalVideoMode.size.x / 15.0f + radius,
         Game::GlobalVideoMode.size.x -
@@ -194,6 +210,7 @@ sf::Vector2f GameScreen::generateFruitPosition(float radius)
     sf::Vector2f position;
     for (int attempt = 0; attempt < 64; ++attempt)
     {
+        // 尝试多次找到不冲突的位置；若始终失败，就返回最后一次结果。
         position = sf::Vector2f(xPos(randomEngine_), yPos(randomEngine_));
         if (isPositionValid(position, radius))
             return position;
@@ -204,6 +221,7 @@ sf::Vector2f GameScreen::generateFruitPosition(float radius)
 
 bool GameScreen::isPositionValid(const sf::Vector2f &position, float radius) const
 {
+    // 新水果不要离蛇头太近，避免一生成就被立刻吃掉。
     const float minHeadDistance = std::max(
         snake_.getHeadRadius() * 6.0f,
         radius * 8.0f);
@@ -212,6 +230,7 @@ bool GameScreen::isPositionValid(const sf::Vector2f &position, float radius) con
 
     for (const auto &fruit : fruit_)
     {
+        // 普通水果之间也保持一定间距，避免视觉上挤成一团。
         if (dis(position, fruit.getPosition()) <
             radius + fruit.getRadius() + Game::GlobalVideoMode.size.x / 80.0f)
             return false;
@@ -227,6 +246,7 @@ bool GameScreen::isPositionValid(const sf::Vector2f &position, float radius) con
 
 void GameScreen::scheduleNextBonusFruit()
 {
+    // 奖励水果在一个随机时间窗口内刷新，增加游戏节奏变化。
     std::uniform_real_distribution<float> intervalSeconds(8.f, 12.f);
     nextBonusFruitSpawn_ = sf::seconds(intervalSeconds(randomEngine_));
 }
@@ -238,6 +258,7 @@ void GameScreen::updateBonusFruit(sf::Time delta)
         bonusFruitLifetime_ -= delta;
         if (bonusFruitLifetime_ <= sf::Time::Zero)
         {
+            // 超时未吃到就让奖励水果消失，并重新排下一轮刷新。
             bonusFruit_.reset();
             bonusFruitLifetime_ = sf::Time::Zero;
             scheduleNextBonusFruit();
@@ -246,6 +267,7 @@ void GameScreen::updateBonusFruit(sf::Time delta)
 
         if (bonusFruitLifetime_ <= BonusFruitBlinkThreshold)
         {
+            // 临近消失时闪烁，提醒玩家抓紧吃掉。
             const auto blinkSlice = bonusFruitLifetime_.asMilliseconds() / 150;
             bonusFruit_->setVisible(blinkSlice % 2 == 0);
         }
@@ -259,6 +281,7 @@ void GameScreen::updateBonusFruit(sf::Time delta)
     nextBonusFruitSpawn_ -= delta;
     if (nextBonusFruitSpawn_ <= sf::Time::Zero)
     {
+        // 倒计时结束后正式生成奖励水果。
         bonusFruit_ = createBonusFruit();
         bonusFruitLifetime_ = BonusFruitLifetime;
     }

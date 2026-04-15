@@ -1,6 +1,11 @@
 #include "element/Grid.h"
 #include "Game.h"
 
+/*
+ * 模块说明：
+ * 该文件实现背景网格的构造与渲染。
+ */
+
 using namespace sfSnake;
 
 Grid::Grid()
@@ -14,6 +19,7 @@ void Grid::render(sf::RenderWindow &window)
     gridVline.setFillColor(Game::Color::Grid[Game::GridColor]);
     gridHline.setFillColor(Game::Color::Grid[Game::GridColor]);
 
+    // 网格间距固定为窗口宽度的 1/50，保证缩放时仍然较为均匀。
     static float gridSpace = Game::GlobalVideoMode.size.x / 50.0f;
     for (float i = 0.f; i < Game::GlobalVideoMode.size.x; i += gridSpace)
     {

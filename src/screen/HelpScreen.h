@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+ * 模块说明：
+ * HelpScreen 展示游戏规则和操作说明，是首次游玩时的引导界面。
+ */
+
 #include <SFML/Graphics.hpp>
 
 #include "screen/Screen.h"
@@ -19,7 +24,9 @@ namespace sfSnake
         void render(sf::RenderWindow &window) override;
 
     private:
+        // 左上角返回按钮。
         Button returnButton_;
+        // 居中的帮助说明文本。
         sf::Text text_;
     };
 }

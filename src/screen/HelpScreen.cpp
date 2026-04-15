@@ -1,5 +1,10 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现帮助页面的说明文本、标题动画和返回逻辑。
+ */
+
 #include <memory>
 #include <iostream>
 
@@ -13,6 +18,7 @@ using namespace sfSnake;
 HelpScreen::HelpScreen()
     : text_(Game::GlobalFont)
 { 
+    // 首次进入帮助页后做标记，避免“开始游戏”时重复跳转帮助说明。
     if(!Game::ifShowedHelp) Game::ifShowedHelp = true;
 
     text_.setFont(Game::GlobalFont);
@@ -46,6 +52,7 @@ void HelpScreen::handleInput(sf::RenderWindow &window)
         returnButton_.focused(true);
         if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
+            // 返回到进入帮助页之前暂存的界面。
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
             Game::MainScreen = Game::TmpScreen;

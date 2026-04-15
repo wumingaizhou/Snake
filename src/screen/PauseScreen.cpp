@@ -1,5 +1,10 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现暂停界面的交互逻辑和标题展示。
+ */
+
 #include <memory>
 #include <iostream>
 
@@ -15,6 +20,7 @@ using namespace sfSnake;
 PauseScreen::PauseScreen()
     : button_(3)
 {
+    // 暂停界面沿用菜单布局，降低玩家的理解成本。
     button_[0].update("assets/image/optionUI.png");
     button_[1].update("assets/image/restartUI.png");
     button_[2].update("assets/image/exitUI.png");
@@ -90,6 +96,7 @@ void PauseScreen::handleInput(sf::RenderWindow &window)
         returnButton_.focused(true);
         if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
+            // 返回按钮恢复到暂停前保存的那一局游戏。
             Game::mouseButtonCDtime = Game::mouseButtonClock.restart();
             Game::mouseButtonLocked = true;
             Game::MainScreen = Game::TmpGameScreen;

@@ -1,6 +1,11 @@
 #include <SFML/Graphics.hpp>
 #include <cmath>
 
+/*
+ * 模块说明：
+ * 该文件实现水果对象的构造、可见性控制和渲染效果。
+ */
+
 #include "Fruit.h"
 #include "Game.h"
 
@@ -14,6 +19,7 @@ Fruit::Fruit(
     float radiusScale)
     : score_(score), kind_(kind), visible_(true)
 {
+    // 水果大小按窗口宽度换算，保证不同分辨率下仍有相似视觉比例。
     shape_.setRadius(Game::GlobalVideoMode.size.x / 256.0f * radiusScale);
     setOriginMiddle(shape_);
     shape_.setPosition(position);
@@ -21,6 +27,7 @@ Fruit::Fruit(
 
     if (kind_ == FruitKind::Bonus)
     {
+        // 奖励水果额外绘制描边，便于和普通水果区分。
         shape_.setOutlineThickness(Game::GlobalVideoMode.size.x / 400.0f);
         shape_.setOutlineColor(sf::Color(0xf1c40fff));
     }
@@ -50,6 +57,7 @@ void Fruit::render(sf::RenderWindow &window) const
 
     if (kind_ == FruitKind::Bonus)
     {
+        // 奖励水果外围的脉冲圆环只在渲染时临时生成，用来强化“限时奖励”提示。
         static sf::Clock pulseClock;
         const float phase = pulseClock.getElapsedTime().asSeconds() * 6.0f;
         const float pulse = 0.5f + 0.5f * std::sin(phase);

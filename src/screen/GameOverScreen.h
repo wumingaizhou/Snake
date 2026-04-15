@@ -1,5 +1,11 @@
 #pragma once
 
+/*
+ * 模块说明：
+ * GameOverScreen 是结算界面，负责显示最终分数并提供重开、设置、
+ * 帮助、关于和退出入口。
+ */
+
 #include <SFML/Graphics.hpp>
 #include <vector>
 
@@ -19,9 +25,12 @@ namespace sfSnake
         void render(sf::RenderWindow &window) override;
 
     private:
+        // 居中的最终分数字样。
         sf::Text text_;
-        
+
+        // 三个主按钮：设置、重开、退出。
         std::vector<Button> button_;
+        // 当前局得分，会写入排行榜。
         unsigned score_;
 
         OptionButton helpButton_;

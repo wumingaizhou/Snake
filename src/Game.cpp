@@ -1,5 +1,11 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现 Game 的主循环、全局资源初始化以及统一的输入/更新/渲染流程。
+ * 这里也是各个界面共享状态的定义位置。
+ */
+
 #include <memory>
 #include <iostream>
 #include <string>
@@ -47,6 +53,7 @@ const sf::Color Game::Color::Fruit[] =
 
 sf::VideoMode Game::initVideoMode_()
 {
+    // 默认取桌面分辨率的一半作为窗口大小，让窗口在多数设备上都不会过大。
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
     return sf::VideoMode(
         {desktopMode.size.x / 2u, desktopMode.size.y / 2u},
@@ -101,6 +108,7 @@ bool Game::ifShowedHelp = false;
 Game::Game()
     : TimePerFrame_(sf::seconds(1.f / 100.f))
 {
+    // 创建游戏窗口，并限制渲染帧率，避免无意义地占满 CPU。
     window_.create(
         GlobalVideoMode,   // videoMode
         "sfSnakePro",      // window name
@@ -108,11 +116,13 @@ Game::Game()
     window_.setFramerateLimit(60);
 
     sf::Image icon;
+    // 设置窗口图标；若资源丢失，只输出错误信息，不阻止程序运行。
     if (icon.loadFromFile("assets/image/favicon.png"))
         window_.setIcon(icon);
     else
         std::cerr << "Failed to load icon: assets/image/favicon.png\n";
 
+    // 载入并循环播放背景音乐。
     if (bgMusic_.openFromFile("assets/music/Roa - Bloom.wav"))
     {
         bgMusic_.setVolume(30);
@@ -127,12 +137,14 @@ Game::Game()
 
 void Game::handleInput()
 {
+    // 先处理窗口级事件，例如关闭按钮。
     while (const std::optional<sf::Event> event = window_.pollEvent())
     {
         if (event->is<sf::Event::Closed>())
             window_.close();
     }
 
+    // 只有在窗口聚焦且鼠标位于窗口范围内时，才把输入交给当前界面。
     if (window_.hasFocus() &&
         sf::FloatRect(
             {0.f, 0.f},
@@ -146,11 +158,13 @@ void Game::handleInput()
 
 void Game::update(sf::Time delta)
 {
+    // 当前界面的逻辑更新统一由这里调度。
     Game::MainScreen->update(delta);
 }
 
 void Game::render()
 {
+    // 每一帧都先清屏，再绘制当前界面，最后显示到窗口。
     window_.clear(Color::Background[BackgroundColor]);
     Game::MainScreen->render(window_);
     window_.display();
@@ -158,6 +172,7 @@ void Game::render()
 
 void Game::run()
 {
+    // 使用“固定逻辑步长 + 独立渲染”的经典游戏循环结构。
     sf::Clock clock;
     sf::Time timeSinceLastUpdate = sf::Time::Zero;
     mouseButtonClock.restart();
@@ -168,8 +183,10 @@ void Game::run()
         sf::Time delta = clock.restart();
         timeSinceLastUpdate += delta;
 
+        // 输入每帧都立即处理，保证操作手感及时。
         handleInput();
 
+        // 如果这一帧积累了多份逻辑时间，就补做多次更新，避免速度忽快忽慢。
         while (timeSinceLastUpdate > TimePerFrame_)
         {
             timeSinceLastUpdate -= TimePerFrame_;
@@ -178,6 +195,7 @@ void Game::run()
 
         render();
 
+        // 鼠标锁用于阻止一次点击在多个界面或按钮上重复触发。
         delta = mouseButtonClock.restart();
         mouseButtonCDtime += delta;
 
@@ -187,6 +205,7 @@ void Game::run()
             mouseButtonLocked = false;
         }
 
+        // 键盘锁和鼠标锁机制类似，给需要节流的按键操作预留支持。
         delta = keyboardClock.restart();
         keyboardCDtime += delta;
 

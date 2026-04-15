@@ -1,5 +1,10 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现结算界面的展示和交互逻辑。
+ */
+
 #include <iostream>
 #include <memory>
 
@@ -15,6 +20,7 @@ using namespace sfSnake;
 GameOverScreen::GameOverScreen(std::size_t score)
     : text_(Game::GlobalFont), button_(3), score_(score)
 {
+    // 进入结算页时立即记录本局得分，供菜单页排行榜显示。
     recordScore(score_);
 
     text_.setFont(Game::GlobalFont);
@@ -77,6 +83,7 @@ void GameOverScreen::handleInput(sf::RenderWindow &window)
         button_[1].focused(true);
         if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
+            // 直接重新开一局，不需要回菜单。
             Game::mouseButtonCDtime = Game::mouseButtonClock.restart();
             Game::mouseButtonLocked = true;
             Game::MainScreen = std::make_shared<GameScreen>();
@@ -125,6 +132,7 @@ void GameOverScreen::handleInput(sf::RenderWindow &window)
 
 void GameOverScreen::update(sf::Time delta)
 {
+    // 结算页是静态页面，目前不需要逐帧更新逻辑。
 }
 
 void GameOverScreen::render(sf::RenderWindow &window)

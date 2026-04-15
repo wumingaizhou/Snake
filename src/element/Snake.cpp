@@ -1,5 +1,11 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现贪吃蛇主体的行为逻辑，包括输入控制、移动、成长、
+ * 穿墙、碰撞检测以及蛇身绘制。
+ */
+
 #include <memory>
 #include <iostream>
 
@@ -26,6 +32,7 @@ Snake::Snake()
       pickupSound_(pickupBuffer_),
       dieSound_(dieBuffer_)
 {
+    // 先构造初始路径，再配置外观和音效资源。
     initNodes();
 
     nodeShape.setFillColor(sf::Color(0xf1c40fff));
@@ -39,6 +46,7 @@ Snake::Snake()
     {
         headTexture.setSmooth(true);
         const sf::Vector2u textureSize = headTexture.getSize();
+        // 根据贴图高度缩放蛇头，让它和身体节点尺寸匹配。
         const float headScale = nodeRadius_ / textureSize.y * 2.6f;
         headSprite.setTexture(headTexture, true);
         headSprite.setScale({headScale, headScale});
@@ -73,6 +81,7 @@ Snake::Snake()
 
 void Snake::initNodes()
 {
+    // 蛇从窗口中心生成，身体沿当前反方向向后展开。
     path_.push_back(SnakePathNode(
         Game::GlobalVideoMode.size.x / 2.0f,
         Game::GlobalVideoMode.size.y / 2.0f));
@@ -88,6 +97,7 @@ void Snake::initNodes()
 
 void Snake::handleInput(sf::RenderWindow &window)
 {
+    // 键盘输入优先按四个正交方向切换运动方向。
     if (
         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up) ||
         sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W))
@@ -122,6 +132,7 @@ void Snake::handleInput(sf::RenderWindow &window)
                         Game::GlobalVideoMode.size.x / 15.0f)) >
                 Game::GlobalVideoMode.size.x / 16.0f)
             {
+                // 鼠标控制时，朝“蛇头到鼠标”的方向做归一化移动。
                 direction_ =
                     static_cast<sf::Vector2f>(MousePosition) -
                     toWindow(path_.front());
@@ -132,6 +143,7 @@ void Snake::handleInput(sf::RenderWindow &window)
         }
     }
 
+    // 空格只影响速度，不修改方向。
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Space))
         speedup_ = true;
     else
@@ -140,10 +152,12 @@ void Snake::handleInput(sf::RenderWindow &window)
 
 void Snake::update(sf::Time delta)
 {
+    // 真实移动步进与 delta 解耦，速度主要由每帧推进次数决定。
     move();
     static int count = 0;
     if (++count >= 40)
     {
+        // 边界重定位不需要每帧都做，间隔执行即可。
         checkOutOfWindow();
         count -= 40;
     }
@@ -152,6 +166,7 @@ void Snake::update(sf::Time delta)
 
 bool Snake::canEatFruit(const Fruit &fruit) const
 {
+    // 以“蛇头半径 + 水果半径”为阈值做圆形碰撞判断。
     return dis(
                fruit.getPosition(),
                toWindow(path_.front())) <
@@ -166,6 +181,7 @@ void Snake::eatFruit(const Fruit &fruit)
 
 void Snake::grow(int score)
 {
+    // 通过延迟删除尾节点来实现“身体增长”的视觉效果。
     tailOverlap_ += score * 10;
     score_ += score;
 }
@@ -196,10 +212,12 @@ void Snake::move()
     int times = speedup_ ? 2 : 1;
     for (int i = 1; i <= times; i++)
     {
+        // 把新头节点插到队首，形成连续运动轨迹。
         path_.push_front(SnakePathNode(
             headNode.x + direction_.x * i * nodeRadius_ / 5.0,
             headNode.y + direction_.y * i * nodeRadius_ / 5.0));
         if (tailOverlap_)
+            // 若还有待增长长度，就先不删尾巴。
             tailOverlap_--;
         else
             path_.pop_back();
@@ -214,6 +232,7 @@ void Snake::checkSelfCollisions()
     for (auto i = path_.begin(); i != path_.end(); i++, count++)
         if (count >= 30 && dis(head, toWindow(*i)) < 2.0f * nodeRadius_)
         {
+            // 前面 30 个采样点离蛇头太近，属于正常身体连续部分，不算自撞。
             dieSound_.play();
             sf::sleep(sf::seconds(dieBuffer_.getDuration().asSeconds()));
             hitSelf_ = true;
@@ -238,6 +257,7 @@ void Snake::checkOutOfWindow()
     }
     if (OutOfWindow)
     {
+        // 只有整条蛇都离开屏幕后，才整体平移到另一侧，形成穿墙效果。
         SnakePathNode &tail = path_.back();
         if (tail.x < 0)
             for (auto &i : path_)
@@ -256,6 +276,7 @@ void Snake::checkOutOfWindow()
 
 SnakePathNode Snake::toWindow(SnakePathNode node) const
 {
+    // 把逻辑路径点折返到可见窗口坐标内，避免穿墙后绘制到屏幕外。
     while (node.x < 0)
         node.x = node.x + Game::GlobalVideoMode.size.x;
     while (node.x > Game::GlobalVideoMode.size.x)
@@ -279,6 +300,7 @@ void Snake::render(sf::RenderWindow &window)
     wNowHeadNode = toWindow(lastSnakeNode);
     headSprite.setPosition(wNowHeadNode);
     recDirection = direction_;
+    // 通过方向向量反算蛇头朝向，让蛇头图片始终面向前进方向。
     angle =
         std::acos(recDirection.y / length(recDirection)) /
         3.14159265358979323846 * 180.0;
@@ -294,11 +316,13 @@ void Snake::render(sf::RenderWindow &window)
         if (count % 5 == 0)
         {
             if (count % 2)
+                // 奇数段作为中间连接块的参考点。
                 lastMiddleNode = *i;
             else
             {
                 nowSnakeNode = *i;
 
+                // 偶数段用于摆放身体圆节点，并推导连接矩形的旋转角度。
                 recDirection = nowSnakeNode - lastSnakeNode;
                 angle =
                     std::acos(recDirection.y / length(recDirection)) /
@@ -326,6 +350,7 @@ void Snake::renderNode(sf::Vector2f &nowPosition, T &shape, sf::RenderWindow &wi
     shape.setPosition(nowPosition);
     window.draw(shape);
 
+    // 如果节点靠近边界，就在对侧额外补绘一份，保证穿墙时视觉连续。
     if (nowPosition.x <= nodeRadius_ + offset)
     {
         shape.setPosition(nowPosition + sf::Vector2f(Game::GlobalVideoMode.size.x, 0.f));

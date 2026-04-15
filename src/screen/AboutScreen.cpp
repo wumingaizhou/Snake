@@ -1,5 +1,10 @@
 #include <SFML/Graphics.hpp>
 
+/*
+ * 模块说明：
+ * 该文件实现关于页面的文本展示和返回逻辑。
+ */
+
 #include <memory>
 #include <iostream>
 
@@ -41,6 +46,7 @@ void AboutScreen::handleInput(sf::RenderWindow &window)
         returnButton_.focused(true);
         if (!Game::mouseButtonLocked && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left))
         {
+            // 回到进入关于页之前的界面。
             Game::mouseButtonCDtime = sf::Time::Zero;
             Game::mouseButtonLocked = true;
             Game::MainScreen = Game::TmpScreen;
